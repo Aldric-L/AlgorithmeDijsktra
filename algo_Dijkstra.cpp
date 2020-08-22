@@ -2,117 +2,107 @@
 
 algo_Dijkstra::algo_Dijkstra(int const &nb, bool a)
 {
+	s_ar = ' ';
+	s_dep = ' ';
 	nb_sommets = &nb;
 	admin = a;
-	need_sommets();
-	need_poids();
-
-	/*
-		Le constructeur n'appelle pas de lui-même la méthode Dijkstra (publique de ce fait) qui execute l'algorithme.
-		J'ai fais ce choix pour permettre d'implementer une autre méthode que need_poids que je trouve très pénible pour les graphes d'ordre important
-	*/
-
 }
 
-void algo_Dijkstra::need_sommets() {
-	std::cout << "\n Veuillez indiquer les sommets : (Ecrire 'fin' pour arreter)";
-	std::string s;
-	for (int i(1); i <= *nb_sommets; i++) {
-		std::cin >> s;
-		if (s == "fin") {
-			break;
-		}
-		else {
-			if (s.length() == 1) {
-				const char sc = s[0];
-				liste_sommets.push_back(sc);
-				if (admin)
-					std::cout << "Done !";
-			}
-			else {
-				std::cout << "Erreur, le sommet doit etre nomme par une seule lettre. Ressayez.";
-				i = i - 1;
-			}
-		}
-		if (i+1 <= *nb_sommets)
-			std::cout << "\n Sommet suivant ?";
+//Setters
+void algo_Dijkstra::setPoids(std::vector<std::vector<std::string>>& poids) {
+	if (poids.size() != *algo_Dijkstra::nb_sommets) {
+		throw std::exception("Error, weights do not match");
 	}
-
-	if (admin) {
-		std::cout << "\n Verification, les sommets sont ";
-		for (int i(0); i <= (liste_sommets.size() - 1); ++i)
-		{
-			std::cout << liste_sommets[i] << " ";
+	for (unsigned int i(0); i < poids.size(); i++) {
+		if (poids[i].size() != *algo_Dijkstra::nb_sommets) {
+			throw std::exception("Error, weights do not match");
 		}
 	}
+	algo_Dijkstra::poids = poids;
+}
+void algo_Dijkstra::setSommets(std::vector<char>& liste_soms) {
+	if (liste_soms.size() != *algo_Dijkstra::nb_sommets)
+		throw std::exception("Error, inputs do not match with previous datas");
 
-	std::cout << "\n Sommet de depart ?";
-	std::cin >> s_dep;
-	std::cout << "\n Sommet d'arrivee ?";
-	std::cin >> s_ar;
+	algo_Dijkstra::liste_sommets = liste_soms;
+}
+void algo_Dijkstra::setFromStart(char s_dep, char s_ar){
+	if (!alvect::vectContains(algo_Dijkstra::liste_sommets, s_dep) || !alvect::vectContains(algo_Dijkstra::liste_sommets, s_ar))
+		throw std::exception("Error, start and end do not match with previous datas");
+
+	algo_Dijkstra::s_dep = s_dep;
+	algo_Dijkstra::s_ar = s_ar;
+}
+void algo_Dijkstra::setGrapheType(bool& oriente, bool& simple){
+	g_o = oriente;
+	g_simple = simple;
 }
 
-void algo_Dijkstra::need_poids() {
-
-	std::cout << "\n Le graphe est il simple ? (o/n)";
-	char rep;
-	std::cin >> rep;
-	if (rep == 'o' || rep == 'O' || rep == '0')
-		g_simple = true;
-
-	//Le graphe est-il orienté
-	bool g_o = false;
-	std::cout << "\n Le graphe est il oriente ? (o/n)";
-	rep = ' ';
-	std::cin >> rep;
-	if (rep == 'o' || rep == 'O' || rep == '0')
-		g_o = true;
-
-	std::cout << "\n Determination des poids des chaines de longueur 1 entre les sommets du graphe :";
-	std::cout << "\n (Ecrire 'i' s'il n'existe aucune chaine de longueur 1 entre les deux sommets)";
-	for (int i(0); i <= (*nb_sommets-1); i++) {
-		std::vector <std::string> p_ligne;
-		std::string p;
-		for (int n(0); n <= (*nb_sommets - 1); n++) {
-			if (g_simple && liste_sommets[i] == liste_sommets[n]) {
-				p_ligne.push_back("0");
-			}
-			else {
-				if (i >= n && i != 0 && g_o == false) {
-					p_ligne.push_back(poids[n][i]);
-					std::cout << "\n Poids de la chaine entre " << liste_sommets[i] << " et " << liste_sommets[n] << " = " << poids[n][i];
-				}
-				else {
-					std::cout << "\n Poids de la chaine entre " << liste_sommets[i] << " et " << liste_sommets[n] << " :";
-					// La encore, en toute rigueur, il faudrait vérifier que l'utilisateur entre bien un nombre ou "i"
-					std::cin >> p;
-					p_ligne.push_back(p);
-				}
-				
-			}
-		}
-		poids.push_back(p_ligne);
-	}
-	/*
-	Instructions de contrôle	
-	for (int i(0); i <= (*nb_sommets - 1); i++) {
-		for (int n(0); n <= (*nb_sommets - 1); n++) {
-			std::cout << "\n Poids de la chaine entre " << liste_sommets[i] << " et " << liste_sommets[n] << " : " << poids[i][n];
-		}
-	}*/
-
+//Getters
+const std::vector<char>& algo_Dijkstra::getSommets() {
+	return liste_sommets;
 }
 
+const std::vector<std::vector<std::string>>& algo_Dijkstra::getPoids() {
+	return poids;
+}
+
+const int* const algo_Dijkstra::getNbSoms() {
+	return nb_sommets;
+}
+
+const std::vector<char> algo_Dijkstra::getDijkstraTabSelected() {
+	if (tableau.size() == 0 || tableau.empty()) {
+		algo_Dijkstra::Dijkstra();
+	}
+	return s_traites;
+}
+
+const std::vector<std::string> algo_Dijkstra::getDijkstraFinalChain()
+{
+	if (tableau.size() == 0 || tableau.empty()) {
+		algo_Dijkstra::Dijkstra();
+	}
+	return chaine_finale;
+}
+
+const int algo_Dijkstra::getDijkstraFinalChainWeigth()
+{
+	return poids_min_total;
+}
+
+const std::vector<std::vector<std::vector<std::string>>> algo_Dijkstra::getDijkstraTab() {
+	if (tableau.size() == 0 || tableau.empty()) {
+		algo_Dijkstra::Dijkstra();
+	}
+	return tableau;
+}
+
+const bool algo_Dijkstra::isOriente() {
+	return g_o;
+}
+
+const bool algo_Dijkstra::isSimple() {
+	return g_simple;
+}
+
+const bool algo_Dijkstra::isAdmin() {
+	return admin;
+}
+
+
+/*
+	Méthode privée qui consiste en la réalisation de l'algorithme de Dijkstra
+	Ses résultats doivent être récupérés par les getters
+
+	@access private
+	@author Aldric L.
+*/
 void algo_Dijkstra::Dijkstra() {
-	//Initialisation
-	//On créé le traditionnel tableau de Dijkstra, un tableau à trois dimensions
-	std::vector<std::vector <std::vector <std::string>>> tableau;
-	//Attention : la colonne "sommets selectionnés" est dans un autre vector : s_traites
-	//On créé aussi la liste des sommets déjà traités
-	std::vector<char> s_traites;
-	//Et le total des poids 
-	int poids_min_total(0);
+	if (!algo_Dijkstra::isInitialized())
+		throw std::exception("All datas must be set before calling these methods");
 
+	//Initialisation
 	//--Premier tour--
 	std::vector <std::vector <std::string>> ligne;
 	std::vector <std::string> element;
@@ -148,6 +138,9 @@ void algo_Dijkstra::Dijkstra() {
 	// -- L'algorithme en lui-même -- 
 	//Tant que le dernier sommet traité n'est pas le sommet de départ, on poursuit l'analyse
 	//l'entier n correspond au numéro de ligne du vector tableau qui est en cours de traitement
+	if (s_traites.empty())
+		throw std::exception("Unknown error during the Dijkstra algorithm");
+
 	for (int n(1); s_ar != s_traites.back(); n++) {
 		if (admin)
 			std::cout << "\n \n Ligne " << n << "\n";
@@ -199,8 +192,8 @@ void algo_Dijkstra::Dijkstra() {
 						//Ancienne origine
 						element.push_back(tableau[n - 1][q][1]);
 						//Sommet traité 
-						element.push_back(std::string(1,liste_sommets[q]));
-						
+						element.push_back(std::string(1, liste_sommets[q]));
+
 						if (admin)
 							std::cout << "Traitement de " << liste_sommets[q] << " ancien poids meilleur \n";
 					}
@@ -228,7 +221,7 @@ void algo_Dijkstra::Dijkstra() {
 		meilleur_e.push_back("i");
 		meilleur_e.push_back("i");
 		std::string index_meilleur_sommet;
-		for (int s(0); s <= (ligne.size()-1); s++) {
+		for (int s(0); s <= (ligne.size() - 1); s++) {
 			if (admin) {
 				std::cout << "\n Nb d'elements dans la ligne : " << ligne.size();
 				std::cout << "\n index : " << s;
@@ -260,30 +253,9 @@ void algo_Dijkstra::Dijkstra() {
 			std::cout << "\n Selection de " << index_meilleur_sommet;
 		tableau.push_back(ligne);
 	}
-	std::cout << "\n\n";
-	std::cout << "\nLe tableau de Dijkstra est : ";
-	//Affichage du tableau final :
-	// 1ere ligne :
-	std::cout << "\n";
-	for (int i(0); i <= (liste_sommets.size() - 1); i++) {
-		std::cout << "   " << liste_sommets[i] << "   |";
-	}
-	std::cout << " Sommet selectionne";
-	//Lignes suivantes
-	for (int i(0); i <= (tableau.size() - 1); i++) {
-		std::cout << "\n";
-		for (int n(0); n <= (tableau[i].size() - 1); n++) {
-			if (tableau[i][n][0] == "d")
-				std::cout << "   /   | ";
-			else
-				std::cout << " " << tableau[i][n][0] << "(" << tableau[i][n][1].c_str() << ") | ";
-		}
-		std::cout << s_traites[i];
-	}
 	
 
 	// Determination de la chaine la plus courte
-	std::vector <std::string> chaine_finale;
 	std::string last_sommet = std::string(1, s_traites.back());
 	chaine_finale.push_back(last_sommet);
 
@@ -299,17 +271,17 @@ void algo_Dijkstra::Dijkstra() {
  			}
 		}
 	}
+}
 
-	std::cout << "\n La chaine la plus courte entre " << s_dep << " et " << s_ar << " est : ";
-
-	//Affichage de la chaine
-	for (int i(0); i <= (chaine_finale.size() - 1); i++) {
-		if (i != (chaine_finale.size() - 1))
-			std::cout << chaine_finale[chaine_finale.size() - i - 1] << " - ";
-		else 
-			std::cout << chaine_finale[chaine_finale.size() - i - 1];
-	}
-	std::cout << " (Avec un poids de " << poids_min_total << ") \n";
-	system("PAUSE");
+bool algo_Dijkstra::isInitialized(){
+	if (liste_sommets.empty())
+		return false;
+	if (poids.empty())
+		return false;
+	if (s_ar == ' ')
+		return false;
+	if (s_dep == ' ')
+		return false;
+	return true;
 }
 
